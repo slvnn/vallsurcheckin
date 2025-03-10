@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vallsur Check In</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 10px;
+      color: #444;
+    }
+
+    #time-display {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #666;
+    }
+
+    #current-string {
+      font-size: 0.95rem;
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      word-break: break-all;
+      max-width: 90%;
+      text-align: center;
+      margin-bottom: 20px;
+      
+    }
+    
+    #current-string {
+        font-size: 0.95rem;
+        background: #fff;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        word-break: break-all;
+        max-width: 90%;
+        text-align: center;
+        margin-bottom: 20px;
+        -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
+        -webkit-user-select: none;   /* Prevent selection of the text */
+        user-select: none;           /* Prevent selection of the text */
+}
+
+
+    #qr-container {
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    /* Responsive design tweaks */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #time-display {
+        font-size: 1rem;
+      }
+
+      #current-string {
+        font-size: 0.85rem;
+        padding: 8px;
+      }
+
+      #qr-container {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Vallsur Check In</h1>
+
+  <div id="time-display">Current Time: --:--</div>
+
+  <div id="current-string">Loading...</div>
+
+  <div id="qr-container"></div>
+
+  <footer>
+    © 2025 Copyright - Muy legal
+  </footer>
+
+  <!-- QRCode.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const fixedPart = "vallsur;event;6507;date;";
+
+    function generateDynamicString() {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = now.getMonth() + 1; // Months from 0-11, so add 1
+      const year = now.getFullYear();
+      const hour = String(now.getHours()).padStart(2, '0');
+
+      return `${fixedPart}${day}${month}${year}${hour}`;
+    }
+
+    function updateTimeDisplay() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('time-display').innerText = `Current Time: ${hours}:${minutes}:${seconds}`;
+    }
+
+    let qr;
+
+    function updateQRCode() {
+      const dynamicString = generateDynamicString();
+
+      document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
+
+      const container = document.getElementById('qr-container');
+      container.innerHTML = '';
+
+      qr = new QRCode(container, {
+        text: dynamicString,
+        width: 250,
+        height: 250,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function startUpdating() {
+      updateQRCode();
+
+      const now = new Date();
+      const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+
+      setTimeout(() => {
+        updateQRCode();
+        setInterval(updateQRCode, 60 * 60 * 1000);
+      }, msUntilNextHour);
+    }
+
+    // Start time display refresh every second
+    setInterval(updateTimeDisplay, 1000);
+
+    // Initial runs
+    updateTimeDisplay();
+    startUpdating();
+  </script>
+
+</body>
+</html>
