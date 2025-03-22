@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vallsur Check In</title>
+  <title>Vallsur Rewards System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
@@ -22,12 +22,23 @@
       padding: 20px;
     }
 
+    .header-container {
+        display: flex;
+        align-items: center; /* Vertically center items */
+        flex-direction: row;
+        justify-content: space-between; /* Space out the logo and tabs */
+        width: 100%;
+        max-width: 700px; /* Keep consistent with other containers */
+        margin-bottom: 20px;
+        
+    }
+
     h1 {
       font-size: 2rem;
-      text-align: center;
-      margin-bottom: 10px;
       color: #444;
+      margin-right: 20px; /*Added some space between logo and tabs.*/
     }
+
 
     #time-display {
       font-size: 1.2rem;
@@ -35,7 +46,7 @@
       color: #666;
     }
 
-    #current-string {
+    #current-string, #current-string-shop {
       font-size: 0.95rem;
       background: #fff;
       padding: 10px;
@@ -45,24 +56,10 @@
       max-width: 90%;
       text-align: center;
       margin-bottom: 20px;
-      
+      -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
+      -webkit-user-select: none;   /* Prevent selection of the text */
+      user-select: none;           /* Prevent selection of the text */
     }
-    
-    #current-string {
-        font-size: 0.95rem;
-        background: #fff;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        word-break: break-all;
-        max-width: 90%;
-        text-align: center;
-        margin-bottom: 20px;
-        -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
-        -webkit-user-select: none;   /* Prevent selection of the text */
-        user-select: none;           /* Prevent selection of the text */
-}
-
 
     #qr-container {
       background: #fff;
@@ -73,11 +70,50 @@
       justify-content: center;
       align-items: center;
     }
+    #qr-container-shop{
+        background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: none; /* Initially hide Shop QR */
+      justify-content: center;
+      align-items: center;
+
+    }
 
     footer {
       margin-top: 30px;
       font-size: 0.8rem;
       color: #aaa;
+    }
+
+    /* Tab Styles */
+    .tab-container {
+       display: flex;  /* Use flexbox for horizontal layout */
+       /* Remove width and justify-content */
+    }
+    .tab {
+        padding: 8px 16px; /* Adjust padding as needed */
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        border-radius: 5px;  /* Slightly rounded corners */
+        margin: 0 5px; /* Add some spacing between tabs */
+        font-weight: bold;
+    }
+
+    .tab:hover {
+        background-color: #ddd;
+    }
+    .tab.active {
+      background-color: #007bff; /* A more modern, distinct color */
+      color: white;           /* White text for contrast */
+      border-color: #007bff;
+    }
+
+    #current-string-shop{
+        display: none;
     }
 
     /* Responsive design tweaks */
@@ -90,35 +126,68 @@
         font-size: 1rem;
       }
 
-      #current-string {
+      #current-string, #current-string-shop {
         font-size: 0.85rem;
         padding: 8px;
       }
 
-      #qr-container {
+      #qr-container, #qr-container-shop {
         padding: 10px;
       }
+
+        .tab {
+            padding: 8px 12px; /* Slightly smaller padding on smaller screens */
+            font-size: 0.9rem;
+        }
+        .header-container{
+           flex-direction: column; /* Stack on smaller screens */
+           align-items: stretch;
+        }
+        .tab-container {
+            margin-top: 10px;
+            justify-content: center;
+        }
+        h1{
+             margin-right: 0px;
+             text-align: center;
+        }
+
     }
   </style>
 </head>
 <body>
 
-  <h1>Vallsur Check In</h1>
+  <div class="header-container">
+        <h1>Vallsur Rewards System</h1>
+        <div class="tab-container">
+            <div id="tab-checkin" class="tab active" onclick="showTab('checkin')">Check In</div>
+            <div id="tab-shop" class="tab" onclick="showTab('shop')">Shop (beta)</div>
+        </div>
+    </div>
+
 
   <div id="time-display">Current Time: --:--</div>
 
   <div id="current-string">Loading...</div>
+  <div id="current-string-shop">QR String: vallsur;operator;205</div>
+
 
   <div id="qr-container"></div>
+  <div id="qr-container-shop"></div>
+
 
   <footer>
-    © 2025 Copyright - Muy legal
+    © 2025 Copyright
   </footer>
 
   <!-- QRCode.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
     const fixedPart = "vallsur;event;6507;date;";
+    const shopQRString = "vallsur;operator;205";
+    let qrCheckIn;
+    let qrShop;
+
 
     function generateDynamicString() {
       const now = new Date();
@@ -139,22 +208,32 @@
       document.getElementById('time-display').innerText = `Current Time: ${hours}:${minutes}:${seconds}`;
     }
 
-    let qr;
+
 
     function updateQRCode() {
       const dynamicString = generateDynamicString();
-
       document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
-
       const container = document.getElementById('qr-container');
       container.innerHTML = '';
 
-      qr = new QRCode(container, {
+      qrCheckIn = new QRCode(container, {  // Use qrCheckIn
         text: dynamicString,
         width: 250,
         height: 250,
         correctLevel: QRCode.CorrectLevel.H
       });
+    }
+
+     function generateShopQRCode() {
+        const containerShop = document.getElementById('qr-container-shop');
+        containerShop.innerHTML = ''; // Clear any existing QR code
+
+        qrShop = new QRCode(containerShop, {
+            text: shopQRString,
+            width: 250,
+            height: 250,
+            correctLevel: QRCode.CorrectLevel.H
+        });
     }
 
     function startUpdating() {
@@ -169,12 +248,34 @@
       }, msUntilNextHour);
     }
 
+
+    function showTab(tabId) {
+        if (tabId === 'checkin') {
+            document.getElementById('tab-checkin').classList.add('active');
+            document.getElementById('tab-shop').classList.remove('active');
+            document.getElementById('qr-container').style.display = 'flex';
+            document.getElementById('qr-container-shop').style.display = 'none';
+            document.getElementById('current-string').style.display = 'block';
+            document.getElementById('current-string-shop').style.display = 'none';
+
+        } else if (tabId === 'shop') {
+            document.getElementById('tab-shop').classList.add('active');
+            document.getElementById('tab-checkin').classList.remove('active');
+            document.getElementById('qr-container').style.display = 'none';
+            document.getElementById('qr-container-shop').style.display = 'flex';
+             document.getElementById('current-string').style.display = 'none';
+            document.getElementById('current-string-shop').style.display = 'block';
+        }
+    }
+
     // Start time display refresh every second
     setInterval(updateTimeDisplay, 1000);
 
     // Initial runs
     updateTimeDisplay();
     startUpdating();
+    generateShopQRCode(); // Generate Shop QR code on load
+
   </script>
 
 </body>
