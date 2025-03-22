@@ -5,7 +5,7 @@
   <title>Vallsur Rewards System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
+      * {
       box-sizing: border-box;
     }
 
@@ -20,7 +20,13 @@
       justify-content: center;
       min-height: 100vh;
       padding: 20px;
+      transition: background-color 0.3s, color 0.3s; /* Smooth transition for theme change */
     }
+    body.dark-mode {
+        background-color: #333;
+        color: #f4f4f4;
+    }
+
 
     .header-container {
         display: flex;
@@ -30,20 +36,27 @@
         width: 100%;
         max-width: 700px; /* Keep consistent with other containers */
         margin-bottom: 20px;
-        
+
     }
 
     h1 {
       font-size: 2rem;
       color: #444;
       margin-right: 20px; /*Added some space between logo and tabs.*/
+      transition: color 0.3s; /* Smooth transition for h1 color */
     }
-
+     body.dark-mode h1{
+        color: #ddd;
+     }
 
     #time-display {
       font-size: 1.2rem;
       margin-bottom: 10px;
       color: #666;
+      transition: color 0.3s;
+    }
+    body.dark-mode #time-display{
+        color:#aaa;
     }
 
     #current-string, #current-string-shop {
@@ -59,6 +72,13 @@
       -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
       -webkit-user-select: none;   /* Prevent selection of the text */
       user-select: none;           /* Prevent selection of the text */
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    body.dark-mode #current-string,
+    body.dark-mode #current-string-shop {
+        background-color: #444;
+        box-shadow: 0 0 10px rgba(255,255,255,0.2); /* Lighter shadow in dark mode */
+        color: #f8f8f8;
     }
 
     #qr-container {
@@ -69,6 +89,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
     #qr-container-shop{
         background: #fff;
@@ -78,13 +99,23 @@
       display: none; /* Initially hide Shop QR */
       justify-content: center;
       align-items: center;
+      transition: background-color 0.3s, box-shadow 0.3s;
 
+    }
+    body.dark-mode #qr-container,
+    body.dark-mode #qr-container-shop{
+        background-color: #444;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.2);
     }
 
     footer {
       margin-top: 30px;
       font-size: 0.8rem;
       color: #aaa;
+      transition: color 0.3s;
+    }
+    body.dark-mode footer{
+        color: #888;
     }
 
     /* Tab Styles */
@@ -111,6 +142,19 @@
       color: white;           /* White text for contrast */
       border-color: #007bff;
     }
+      body.dark-mode .tab{
+         background-color: #555;
+         border-color: #666;
+         color: #ddd;
+      }
+      body.dark-mode .tab:hover {
+        background-color: #666;
+    }
+      body.dark-mode .tab.active{
+        background-color: #0056b3; /* Darker blue for active tab in dark mode */
+        border-color: #0056b3;
+        color: white;
+      }
 
     #current-string-shop{
         display: none;
@@ -153,6 +197,33 @@
         }
 
     }
+
+   /* Theme Switcher Button */
+    #theme-switcher {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        padding: 0; /* Remove padding */
+        background-color: transparent; /* Transparent background */
+        border: none;
+        cursor: pointer;
+        font-size: 2rem; /* Larger icon */
+        z-index: 1000;
+        color: #ffcc00; /* Sun color - default for light mode*/
+        transition: color 0.3s; /* Smooth transition for color change */
+    }
+
+    #theme-switcher:hover {
+        color: #ff9900;
+    }
+
+      body.dark-mode #theme-switcher {
+        color: #cccccc;  /* Moon color */
+    }
+    body.dark-mode #theme-switcher:hover {
+      color: #ffffff;
+    }
+
   </style>
 </head>
 <body>
@@ -180,6 +251,11 @@
     © 2025 Copyright
   </footer>
 
+    <button id="theme-switcher" onclick="toggleTheme()">
+        <span id="theme-icon">☀</span>  <!-- Unicode for sun -->
+    </button>
+
+
   <!-- QRCode.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
@@ -187,7 +263,7 @@
     const shopQRString = "vallsur;operator;205";
     let qrCheckIn;
     let qrShop;
-
+    let isDarkMode = false; // Keep track of the current theme.
 
     function generateDynamicString() {
       const now = new Date();
@@ -211,20 +287,23 @@
 
 
     function updateQRCode() {
-      const dynamicString = generateDynamicString();
-      document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
-      const container = document.getElementById('qr-container');
-      container.innerHTML = '';
+        const dynamicString = generateDynamicString();
+        document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
+        const container = document.getElementById('qr-container');
+        container.innerHTML = '';
 
-      qrCheckIn = new QRCode(container, {  // Use qrCheckIn
-        text: dynamicString,
-        width: 250,
-        height: 250,
-        correctLevel: QRCode.CorrectLevel.H
-      });
+        // Use colorDark and colorLight options
+        qrCheckIn = new QRCode(container, {
+            text: dynamicString,
+            width: 250,
+            height: 250,
+            correctLevel: QRCode.CorrectLevel.H,
+            colorDark: isDarkMode ? "#ffffff" : "#000000",  // White in dark mode, black in light mode
+            colorLight: isDarkMode ? "#333333" : "#ffffff" // Dark gray in dark mode, white in light mode
+        });
     }
 
-     function generateShopQRCode() {
+    function generateShopQRCode() {
         const containerShop = document.getElementById('qr-container-shop');
         containerShop.innerHTML = ''; // Clear any existing QR code
 
@@ -232,7 +311,9 @@
             text: shopQRString,
             width: 250,
             height: 250,
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: QRCode.CorrectLevel.H,
+            colorDark: isDarkMode ? "#ffffff" : "#000000", // White in dark mode, black in light mode
+            colorLight: isDarkMode ? "#333333" : "#ffffff"  // Dark gray in dark mode, white in light mode
         });
     }
 
@@ -263,9 +344,37 @@
             document.getElementById('tab-checkin').classList.remove('active');
             document.getElementById('qr-container').style.display = 'none';
             document.getElementById('qr-container-shop').style.display = 'flex';
-             document.getElementById('current-string').style.display = 'none';
+            document.getElementById('current-string').style.display = 'none';
             document.getElementById('current-string-shop').style.display = 'block';
         }
+    }
+
+    function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark-mode');
+        updateQRCode();
+        generateShopQRCode();
+        updateThemeIcon(); // Call the function to update based on time/theme
+    }
+
+    function updateThemeIcon() {
+        const now = new Date();
+        const hour = now.getHours();
+        const themeIcon = document.getElementById('theme-icon');
+
+        // Use 24-hour format (0-23) for easier comparison
+        if (hour >= 6 && hour < 18) {  // Daytime (6 AM to 5:59 PM)
+            isDarkMode = false;
+            document.body.classList.remove('dark-mode'); // Ensure correct body class
+            themeIcon.innerHTML = '☀'; // Sun
+        } else { // Nighttime (6 PM to 5:59 AM)
+            isDarkMode = true;
+            document.body.classList.add('dark-mode'); // Ensure correct body class
+            themeIcon.innerHTML = '☾'; // Moon
+        }
+        updateQRCode();
+        generateShopQRCode();
+
     }
 
     // Start time display refresh every second
@@ -275,6 +384,8 @@
     updateTimeDisplay();
     startUpdating();
     generateShopQRCode(); // Generate Shop QR code on load
+    updateThemeIcon();   // Set initial theme based on time
+    setInterval(updateThemeIcon, 60000); // Check every minute
 
   </script>
 
