@@ -45,24 +45,10 @@
       max-width: 90%;
       text-align: center;
       margin-bottom: 20px;
-      
+      -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
+      -webkit-user-select: none;   /* Prevent selection of the text */
+      user-select: none;           /* Prevent selection of the text */
     }
-    
-    #current-string {
-        font-size: 0.95rem;
-        background: #fff;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        word-break: break-all;
-        max-width: 90%;
-        text-align: center;
-        margin-bottom: 20px;
-        -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
-        -webkit-user-select: none;   /* Prevent selection of the text */
-        user-select: none;           /* Prevent selection of the text */
-}
-
 
     #qr-container {
       background: #fff;
@@ -122,11 +108,16 @@
 
     function generateDynamicString() {
       const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = now.getMonth() + 1; // Months from 0-11, so add 1
+      // --- CHANGE HERE ---
+      // Get the day without padding
+      const day = now.getDate();
+      // --- END CHANGE ---
+      const month = now.getMonth() + 1; // Months from 0-11, so add 1 (already behaves as requested)
       const year = now.getFullYear();
-      const hour = String(now.getHours()).padStart(2, '0');
+      const hour = String(now.getHours()).padStart(2, '0'); // Hour remains padded
 
+      // The day and month variables (numbers) will be converted to strings
+      // without leading zeros when used in the template literal below.
       return `${fixedPart}${day}${month}${year}${hour}`;
     }
 
@@ -147,25 +138,28 @@
       document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
 
       const container = document.getElementById('qr-container');
-      container.innerHTML = '';
+      container.innerHTML = ''; // Clear previous QR code
 
       qr = new QRCode(container, {
         text: dynamicString,
         width: 250,
         height: 250,
-        correctLevel: QRCode.CorrectLevel.H
+        correctLevel: QRCode.CorrectLevel.H // High correction level
       });
     }
 
     function startUpdating() {
-      updateQRCode();
+      updateQRCode(); // Initial QR code generation
 
+      // Calculate time until the start of the next hour
       const now = new Date();
       const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
 
+      // Set a timeout to update exactly at the next hour
       setTimeout(() => {
-        updateQRCode();
-        setInterval(updateQRCode, 60 * 60 * 1000);
+        updateQRCode(); // Update at the hour change
+        // Then set an interval to update every hour thereafter
+        setInterval(updateQRCode, 60 * 60 * 1000); // 1 hour in milliseconds
       }, msUntilNextHour);
     }
 
