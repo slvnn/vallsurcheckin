@@ -1,175 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Vallsur Check In</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vallsur QR Code Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f4f4;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       min-height: 100vh;
-      padding: 20px;
+      font-family: Tahoma;
+      transition: background 1s ease;
     }
-
-    h1 {
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: 10px;
-      color: #444;
+    body.day {
+      background: linear-gradient(135deg, #3119d0, #cb7df8, #e5d189); /* Day gradient */
     }
-
-    #time-display {
-      font-size: 1.2rem;
-      margin-bottom: 10px;
-      color: #666;
+    body.night {
+      background: linear-gradient(135deg, #566b95, #1e297a); /* Night gradient */
     }
-
-    #current-string {
-      font-size: 0.95rem;
-      background: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      word-break: break-all;
-      max-width: 90%;
-      text-align: center;
-      margin-bottom: 20px;
-      -webkit-touch-callout: none; /* Disable callout (iOS link detection) */
-      -webkit-user-select: none;   /* Prevent selection of the text */
-      user-select: none;           /* Prevent selection of the text */
+    .container {
+      backdrop-filter: blur(10px);
+      background-color: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
-
-    #qr-container {
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    .qr-container {
+      background-color: white;
+      padding: 16px; 
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
-
-    footer {
-      margin-top: 30px;
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-
-    /* Responsive design tweaks */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.5rem;
-      }
-
-      #time-display {
-        font-size: 1rem;
-      }
-
-      #current-string {
-        font-size: 0.85rem;
-        padding: 8px;
-      }
-
-      #qr-container {
-        padding: 10px;
-      }
+    .countdown {
+      font-variant-numeric: tabular-nums;
     }
   </style>
 </head>
-<body>
+<body class="flex items-center justify-center">
+  <div class="container mx-4 my-8 p-8 rounded-xl max-w-md w-full">
+    <h1 class="text-3xl font-bold text-white text-center mb-6">Vallsur QR Code</h1>
+    <div class="qr-container flex justify-center mb-6">
+      <div id="qrcode"></div>
+    </div>
 
-  <h1>Vallsur Check In</h1>
+    <div class="bg-white/20 rounded-lg p-4 mb-6">
+      <p class="text-white text-center mb-2">Current QR Code String:</p>
+      <p id="qrString" class="text-white text-center font-mono text-sm break-all"></p>
+    </div>
 
-  <div id="time-display">Current Time: --:--</div>
+    <div class="bg-white/20 rounded-lg p-4">
+      <p class="text-white text-center mb-2">Current Time:</p>
+      <p id="currentTime" class="text-white text-center text-xl font-bold countdown"></p>
+      <p class="text-white text-center mt-4 mb-2">Next QR Update In:</p>
+      <p id="nextUpdate" class="text-white text-center text-xl font-bold countdown"></p>
+    </div>
+  </div>
 
-  <div id="current-string">Loading...</div>
-
-  <div id="qr-container"></div>
-
-  <footer>
-    © 2025 Copyright
-  </footer>
-
-  <!-- QRCode.js Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
-    const fixedPart = "vallsur;event;6507;date;";
-
-    function generateDynamicString() {
+    function generateQRCode() {
       const now = new Date();
-      // --- CHANGE HERE ---
-      // Get the day without padding
       const day = now.getDate();
-      // --- END CHANGE ---
-      const month = now.getMonth() + 1; // Months from 0-11, so add 1 (already behaves as requested)
+      const month = now.getMonth() + 1;
       const year = now.getFullYear();
-      const hour = String(now.getHours()).padStart(2, '0'); // Hour remains padded
+      const hour = now.getHours();
 
-      // The day and month variables (numbers) will be converted to strings
-      // without leading zeros when used in the template literal below.
-      return `${fixedPart}${day}${month}${year}${hour}`;
+      const qrString = `vallsur;event;6507;date;${day}${month}${year}${hour}`;
+      document.getElementById('qrString').textContent = qrString;
+
+      const qr = qrcode(0, 'M');
+      qr.addData(qrString);
+      qr.make();
+
+      document.getElementById('qrcode').innerHTML = qr.createImgTag(6);
     }
 
-    function updateTimeDisplay() {
+    function updateTime() {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeString = now.toLocaleTimeString();
+      document.getElementById('currentTime').textContent = timeString;
 
-      document.getElementById('time-display').innerText = `Current Time: ${hours}:${minutes}:${seconds}`;
+      const minutes = 59 - now.getMinutes();
+      const seconds = 59 - now.getSeconds();
+      document.getElementById('nextUpdate').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    let qr;
-
-    function updateQRCode() {
-      const dynamicString = generateDynamicString();
-
-      document.getElementById('current-string').innerText = `QR String: ${dynamicString}`;
-
-      const container = document.getElementById('qr-container');
-      container.innerHTML = ''; // Clear previous QR code
-
-      qr = new QRCode(container, {
-        text: dynamicString,
-        width: 250,
-        height: 250,
-        correctLevel: QRCode.CorrectLevel.H // High correction level
-      });
-    }
-
-    function startUpdating() {
-      updateQRCode(); // Initial QR code generation
-
-      // Calculate time until the start of the next hour
+    function scheduleNextUpdate() {
       const now = new Date();
-      const msUntilNextHour = (60 - now.getMinutes()) * 60 * 1000 - now.getSeconds() * 1000 - now.getMilliseconds();
+      const nextHour = new Date(now);
+      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
 
-      // Set a timeout to update exactly at the next hour
+      const timeUntilNextHour = nextHour - now;
+
       setTimeout(() => {
-        updateQRCode(); // Update at the hour change
-        // Then set an interval to update every hour thereafter
-        setInterval(updateQRCode, 60 * 60 * 1000); // 1 hour in milliseconds
-      }, msUntilNextHour);
+        generateQRCode();
+        setInterval(generateQRCode, 60 * 60 * 1000);
+      }, timeUntilNextHour);
     }
 
-    // Start time display refresh every second
-    setInterval(updateTimeDisplay, 1000);
+    function setDayNightBackground() {
+      const hour = new Date().getHours();
+      const isDay = hour >= 7 && hour < 19;
+      document.body.classList.add(isDay ? 'day' : 'night');
+    }
 
-    // Initial runs
-    updateTimeDisplay();
-    startUpdating();
+    // Run functions on load
+    setDayNightBackground();
+    generateQRCode();
+    updateTime();
+    setInterval(updateTime, 1000);
+    scheduleNextUpdate();
   </script>
-
 </body>
 </html>
