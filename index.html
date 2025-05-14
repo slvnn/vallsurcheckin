@@ -9,11 +9,11 @@
   <style>
     body {
       min-height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      transition: background 1s ease;
+      font-family: Tahoma;
+      transition: background 1s ease, color 1s ease;
     }
     body.day {
-      background: linear-gradient(135deg, #3119d0, #cb7df8, #e5d189); /* Day gradient */
+      background: linear-gradient(135deg, #ffd372, #bc8c26); /* Day gradient */
     }
     body.night {
       background: linear-gradient(135deg, #566b95, #1e297a); /* Night gradient */
@@ -25,32 +25,41 @@
     }
     .qr-container {
       background-color: white;
-      padding: 16px; 
+      padding: 16px;
       border-radius: 8px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
     .countdown {
       font-variant-numeric: tabular-nums;
     }
+
+    /* Dynamic text color */
+    .day .text-dynamic {
+      color: rgb(64, 64, 64) !important;
+    }
+    .night .text-dynamic {
+      color: white !important;
+    }
   </style>
 </head>
 <body class="flex items-center justify-center">
   <div class="container mx-4 my-8 p-8 rounded-xl max-w-md w-full">
-    <h1 class="text-3xl font-bold text-white text-center mb-6">Vallsur QR Code</h1>
+    <h1 class="text-3xl font-bold text-dynamic text-center mb-6">Vallsur QR Code</h1>
+
     <div class="qr-container flex justify-center mb-6">
       <div id="qrcode"></div>
     </div>
 
     <div class="bg-white/20 rounded-lg p-4 mb-6">
-      <p class="text-white text-center mb-2">Current QR Code String:</p>
-      <p id="qrString" class="text-white text-center font-mono text-sm break-all"></p>
+      <p class="text-dynamic text-center mb-2">Current QR Code String:</p>
+      <p id="qrString" class="text-dynamic text-center font-mono text-sm break-all"></p>
     </div>
 
     <div class="bg-white/20 rounded-lg p-4">
-      <p class="text-white text-center mb-2">Current Time:</p>
-      <p id="currentTime" class="text-white text-center text-xl font-bold countdown"></p>
-      <p class="text-white text-center mt-4 mb-2">Next QR Update In:</p>
-      <p id="nextUpdate" class="text-white text-center text-xl font-bold countdown"></p>
+      <p class="text-dynamic text-center mb-2">Current Time:</p>
+      <p id="currentTime" class="text-dynamic text-center text-xl font-bold countdown"></p>
+      <p class="text-dynamic text-center mt-4 mb-2">Next QR Update In:</p>
+      <p id="nextUpdate" class="text-dynamic text-center text-xl font-bold countdown"></p>
     </div>
   </div>
 
@@ -79,7 +88,7 @@
 
       const minutes = 59 - now.getMinutes();
       const seconds = 59 - now.getSeconds();
-      document.getElementById('nextUpdate').textContent = 
+      document.getElementById('nextUpdate').textContent =
         `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
@@ -99,6 +108,7 @@
     function setDayNightBackground() {
       const hour = new Date().getHours();
       const isDay = hour >= 7 && hour < 19;
+
       document.body.classList.add(isDay ? 'day' : 'night');
     }
 
